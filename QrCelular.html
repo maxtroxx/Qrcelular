@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner</title>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Scanner</h1>
+    <video id="video"></video>
+
+    <script>
+        // Accedemos al elemento de video
+        const video = document.getElementById('video');
+
+        // Verificamos si el navegador es compatible con getUserMedia
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+        
+        // Si el navegador es compatible
+        if (navigator.getUserMedia) {
+            // Solicitamos acceso a la cámara
+            navigator.getUserMedia({ video: true }, handleVideo, videoError);
+        }
+
+        // Función para manejar el flujo de video
+        function handleVideo(stream) {
+            // Establecemos el flujo de video en el elemento de video
+            video.srcObject = stream;
+
+            // Instanciamos un objeto de tipo ImageCapture con el flujo de video
+            const track = stream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(track);
+
+            // Escaneamos continuamente los fotogramas del flujo de video
+            const qrScanner = new Instascan.Scanner({ video: video });
+            qrScanner.addListener('scan', function(content) {
+                alert('Código QR detectado: ' + content);
+                // Puedes realizar aquí la acción que desees con el contenido del código QR
+            });
+            Instascan.Camera.getCameras().then(function(cameras) {
+                if (cameras.length > 0) {
+                    qrScanner.start(cameras[0]);
+                } else {
+                    console.error('No se detectó ninguna cámara.');
+                }
+            }).catch(function(e) {
+                console.error(e);
+            });
+        }
+
+        // Función para manejar errores en la obtención del flujo de video
+        function videoError(e) {
+            console.error('Error al acceder a la cámara: ', e);
+        }
+    </script>
+
+    <!-- Incluimos la librería Instascan para escanear códigos QR -->
+    <script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0"></script>
+</body>
+</html>
